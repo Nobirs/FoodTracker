@@ -1,0 +1,72 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Poetry virtualenvs (if created inside project)
+.python-version
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyTest / coverage
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# C extensions
+*.so
+
+# IDEs / editors
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# dotenv
+.env
+.env.*
+
+# Secrets / tokens / credentials (never commit)
+secrets.json
+*.pem
+credentials/
+
+# Docker
+docker-compose.override.yml
+**/docker-compose.override.yml
+docker-compose.*.yml
+docker-compose.local.yml
+.env.docker
+
+# Generated files
+__pycache__/
+*.py[cod]
+
+# Misc
+coverage.xml
+coverage/
