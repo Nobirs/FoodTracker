@@ -34,3 +34,18 @@ isort = "^7.0.0"
 mypy = "^1.18.2"
 pre-commit = "^4.3.0"
 
+# -------------------- mypy config --------------------
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sqlmodel.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.models.*"
+ignore_errors = true
