@@ -6,7 +6,7 @@ from sqlmodel import Field, SQLModel
 
 class WaterIntakeBase(SQLModel):
     amount_ml: int = Field(..., gt=0)
-    recorded_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    recorded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class WaterIntake(WaterIntakeBase, table=True):

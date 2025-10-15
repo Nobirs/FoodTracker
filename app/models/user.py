@@ -13,7 +13,7 @@ class UserBase(SQLModel):
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str = Field(sa_column=Column(String, nullable=False))
-    created_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class UserCreate(UserBase):

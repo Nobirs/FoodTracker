@@ -13,11 +13,12 @@ class MealItem(SQLModel, table=True):
     quantity: float = Field(default=1.0)
     unit: Optional[str] = Field(default="serving")
     calories: Optional[float] = None
+    meal: Optional["Meal"] = Relationship(back_populates="items")
 
 
 class MealBase(SQLModel):
     name: Optional[str] = Field(default="meal")
-    eaten_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    eaten_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     notes: Optional[str] = None
 
 
@@ -26,8 +27,4 @@ class Meal(MealBase, table=True):
     user_id: int = Field(foreign_key="user.id", index=True)
     total_calories: Optional[float] = Field(default=0.0)
     items: List[MealItem] = Relationship(back_populates="meal")
-
-
-MealItem.meal = Relationship(
-    back_populates="items", sa_relationship_kwargs={"lazy": "raise"}
-)
+    items: List[MealItem] = Relationship(back_populates="meal")
