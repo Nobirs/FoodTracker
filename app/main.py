@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 
-from db.base import metadata
-from db.session import engine
 from fastapi import FastAPI
+
+from app.db.base import metadata
+from app.db.session import engine
 
 from .api.v1 import health, user
 
