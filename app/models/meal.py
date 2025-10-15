@@ -27,4 +27,3 @@ class Meal(MealBase, table=True):
     user_id: int = Field(foreign_key="user.id", index=True)
     total_calories: Optional[float] = Field(default=0.0)
     items: List[MealItem] = Relationship(back_populates="meal")
-    items: List[MealItem] = Relationship(back_populates="meal")
