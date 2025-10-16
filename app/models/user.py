@@ -6,7 +6,7 @@ from sqlmodel import Column, Field, SQLModel, String
 
 
 class UserBase(SQLModel):
-    email: EmailStr = Field(index=True)
+    email: EmailStr = Field(index=True, unique=True)
     name: Optional[str] = None
     timezone: Optional[str] = "UTC"
 
