@@ -7,12 +7,12 @@ from app.db.session import engine
 
 from .api.v1 import health, user
 
-metadata.create_all(engine)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # TODO: Add startup tasks
+    metadata.drop_all(engine)
+    metadata.create_all(engine)
     yield
     # TODO: Add shutdown tasks
 

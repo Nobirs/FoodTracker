@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.params import Depends
 from sqlmodel import Session, select
 
+from app.core.security import get_password_hash
 from app.db.session import get_session
 from app.models.user import User, UserCreate, UserRead
 
@@ -16,13 +17,14 @@ async def get_users(session: Annotated[Session, Depends(get_session)]):
     return session.exec(statement).all()
 
 
-@router.post("/user/new", response_model=UserRead)
+@router.post("/user/new", response_model=User)
 async def create_user(
     user: UserCreate, session: Annotated[Session, Depends(get_session)]
 ):
     model_data = user.model_dump()
     pwd = model_data.pop("password")
-    db_user = User(**model_data, hashed_password=pwd)
+    hashed = get_password_hash(pwd)
+    db_user = User(**model_data, hashed_password=hashed)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)

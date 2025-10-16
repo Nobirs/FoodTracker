@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+from pydantic import EmailStr
 from sqlmodel import Column, Field, SQLModel, String
 
 
 class UserBase(SQLModel):
-    email: str = Field(index=True)
+    email: EmailStr = Field(index=True)
     name: Optional[str] = None
     timezone: Optional[str] = "UTC"
 
