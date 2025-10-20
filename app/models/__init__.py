@@ -3,7 +3,7 @@ from .audit import AuditLog
 from .food import FoodCreate, FoodItem, FoodRead
 from .meal import Meal, MealItem
 from .template import Template
-from .user import User, UserCreate, UserRead, UserUpdate
+from .user import Token, TokenData, User, UserCreate, UserRead, UserUpdate
 from .water import WaterCreate, WaterIntake, WaterRead
 
 __all__ = [
@@ -19,6 +19,8 @@ __all__ = [
     "UserCreate",
     "UserRead",
     "UserUpdate",
+    "Token",
+    "TokenData",
     "WaterCreate",
     "WaterIntake",
     "WaterRead",
