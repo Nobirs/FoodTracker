@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -20,8 +21,10 @@ def create_access_token(data: dict) -> str:
     return create_jwt_token(data, settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
 
-def create_refresh_token(data: dict) -> str:
-    return create_jwt_token(data, settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+def create_refresh_token(data: dict) -> tuple[str, str]:
+    jti = str(uuid4())
+    data.update({"jti": jti})
+    return create_jwt_token(data, settings.REFRESH_TOKEN_EXPIRE_MINUTES), jti
 
 
 def verify_token(token: str):
