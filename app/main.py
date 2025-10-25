@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from app.db.base import metadata
 from app.db.session import engine
 
-from .api.v1 import health, user
+from .api.v1 import health, user, water
 
 
 @asynccontextmanager
@@ -20,3 +20,4 @@ async def lifespan(app: FastAPI):
 app = FastAPI(debug=True, lifespan=lifespan)
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(user.router, prefix="/api/v1", tags=["user"])
+app.include_router(water.router, prefix="/api/v1", tags=["water"])
