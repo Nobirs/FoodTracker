@@ -21,3 +21,7 @@ class WaterCreate(WaterIntakeBase):
 class WaterRead(WaterIntakeBase):
     id: int
     user_id: int
+
+
+class WaterUpdate(SQLModel):
+    amount_ml: Optional[int] = Field(None, gt=0)
