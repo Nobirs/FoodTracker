@@ -29,5 +29,19 @@ class FoodCreate(FoodItemBase):
     pass
 
 
+class FoodUpdate(SQLModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    serving_size: Optional[float] = None
+    serving_unit: Optional[str] = "g"
+    calories_per_serving: Optional[float] = None
+    protein_g: Optional[float] = None
+    carbs_g: Optional[float] = None
+    fat_g: Optional[float] = None
+    nutrients: Optional[Dict[str, Any]] = Field(
+        sa_column=Column(JSONB), default_factory=dict
+    )
+
+
 class FoodRead(FoodItemBase):
     id: int
