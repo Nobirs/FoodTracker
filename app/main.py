@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from app.db.base import metadata
 from app.db.session import engine
 
-from .api.v1 import food, health, user, water
+from .api.v1 import activity, food, health, user, water
 
 
 @asynccontextmanager
@@ -18,7 +18,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(debug=True, lifespan=lifespan)
-app.include_router(health.router, prefix="/api/v1", tags=["health"])
-app.include_router(user.router, prefix="/api/v1", tags=["user"])
-app.include_router(water.router, prefix="/api/v1", tags=["water"])
-app.include_router(food.router, prefix="/api/v1", tags=["food"])
+
+api_v1_router = APIRouter(prefix="/api/v1")
+
+api_v1_router.include_router(health.router, tags=["health"])
+api_v1_router.include_router(user.router, tags=["user"])
+api_v1_router.include_router(water.router, tags=["water"])
+api_v1_router.include_router(food.router, tags=["food"])
+api_v1_router.include_router(activity.router, tags=["activity"])
+
+app.include_router(api_v1_router)
