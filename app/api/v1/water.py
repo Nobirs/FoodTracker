@@ -1,10 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlmodel import Session, select
 
+from app.core.background_tasks import BGAction, add_audit
 from app.core.dependencies import get_current_user
 from app.db.session import get_session
+from app.models.audit import AuditLogCreate
 from app.models.user import User
 from app.models.water import WaterCreate, WaterIntake, WaterRead, WaterUpdate
 
@@ -39,11 +41,23 @@ async def add_water(
     new_water: WaterCreate,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
+    background_tasks: BackgroundTasks,
 ):
     water = WaterIntake(user_id=current_user.id, **new_water.model_dump())
     session.add(water)
     session.commit()
     session.refresh(water)
+    background_tasks.add_task(
+        add_audit,
+        new_audit=AuditLogCreate(
+            action=BGAction.ADD,
+            object_type="water",
+            object_id=current_user.id,
+            payload=water.model_dump(),
+        ),
+        user_id=current_user.id,
+        session=session,
+    )
     return water
 
 
@@ -53,6 +67,7 @@ async def update_water(
     update_water: WaterUpdate,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
+    background_tasks: BackgroundTasks,
 ):
     db_water = session.get(WaterIntake, water_id)
     if not db_water or db_water.user_id != current_user.id:
@@ -64,6 +79,17 @@ async def update_water(
     session.add(db_water)
     session.commit()
     session.refresh(db_water)
+    background_tasks.add_task(
+        add_audit,
+        new_audit=AuditLogCreate(
+            action=BGAction.UPDATE,
+            object_type="water",
+            object_id=current_user.id,
+            payload=db_water.model_dump(),
+        ),
+        user_id=current_user.id,
+        session=session,
+    )
     return db_water
 
 
@@ -72,6 +98,7 @@ async def delete_water(
     water_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
+    background_tasks: BackgroundTasks,
 ):
     db_water = session.get(WaterIntake, water_id)
     if not db_water or db_water.user_id != current_user.id:
@@ -80,4 +107,15 @@ async def delete_water(
         )
     session.delete(db_water)
     session.commit()
+    background_tasks.add_task(
+        add_audit,
+        new_audit=AuditLogCreate(
+            action=BGAction.DELETE,
+            object_type="water",
+            object_id=current_user.id,
+            payload=db_water.model_dump(),
+        ),
+        user_id=current_user.id,
+        session=session,
+    )
     return {"msg": "Water deleted"}

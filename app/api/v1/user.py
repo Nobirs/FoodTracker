@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, status
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from redis.asyncio import Redis
@@ -8,11 +8,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from app.config import settings
+from app.core.background_tasks import BGAction, add_audit
 from app.core.dependencies import get_current_user
 from app.core.jwt import create_access_token, create_refresh_token, verify_token
 from app.core.redis import get_redis_client
 from app.core.security import get_password_hash, verify_password
 from app.db.session import get_session
+from app.models.audit import AuditLogCreate
 from app.models.user import Token, User, UserCreate, UserRead
 
 router = APIRouter(prefix="/users")
@@ -28,7 +30,11 @@ async def get_users(
 
 
 @router.post("/register", response_model=UserRead)
-async def register(user: UserCreate, session: Annotated[Session, Depends(get_session)]):
+async def register(
+    user: UserCreate,
+    session: Annotated[Session, Depends(get_session)],
+    background_tasks: BackgroundTasks,
+):
     # Pre-check: ensure email isn't already used
     statement = select(User).where(User.email == user.email)
     existing = session.exec(statement).first()
@@ -42,6 +48,17 @@ async def register(user: UserCreate, session: Annotated[Session, Depends(get_ses
     session.add(db_user)
     try:
         session.commit()
+
+        background_tasks.add_task(
+            add_audit,
+            new_audit=AuditLogCreate(
+                action=BGAction.USER,
+                object_type="register",
+                object_id=db_user.id,
+                payload=db_user.model_dump(),
+            ),
+            session=session,
+        )
     except IntegrityError:
         # Race condition: another request inserted same email concurrently
         session.rollback()
@@ -57,6 +74,7 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Annotated[Session, Depends(get_session)],
     redis: Annotated[Redis, Depends(get_redis_client)],
+    background_tasks: BackgroundTasks,
 ):
     username = form_data.username
     stmt = select(User).where(User.name == username)
@@ -79,6 +97,16 @@ async def login(
         samesite="lax",
         path="/api/v1/users/refresh",
     )
+    background_tasks.add_task(
+        add_audit,
+        new_audit=AuditLogCreate(
+            action=BGAction.USER,
+            object_type="login",
+            object_id=user.id,
+            payload={"access_token": access_token, "refresh_token": refresh_token},
+        ),
+        session=session,
+    )
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -87,6 +115,7 @@ async def logout(
     request: Request,
     response: Response,
     redis: Annotated[Redis, Depends(get_redis_client)],
+    background_tasks: BackgroundTasks,
 ):
     token = request.cookies.get("refresh_token")
     if token:
@@ -95,6 +124,15 @@ async def logout(
         if jti:
             await redis.delete(f"refresh:{jti}")
     response.delete_cookie("refresh_token", path="/api/v1/users/refresh")
+
+    background_tasks.add_task(
+        add_audit,
+        new_audit=AuditLogCreate(
+            action=BGAction.USER, object_type="logout", object_id=payload["sub"]
+        ),
+        session=get_session(),
+    )
+
     return {"msg": "logged out"}
 
 
@@ -104,6 +142,7 @@ async def refresh(
     response: Response,
     redis: Annotated[Redis, Depends(get_redis_client)],
     current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks,
 ):
     token = request.cookies.get("refresh_token")
     if not token:
@@ -146,6 +185,17 @@ async def refresh(
     )
     access_token = create_access_token(
         data={"sub": current_user.name, "email": current_user.email}
+    )
+
+    background_tasks.add_task(
+        add_audit,
+        new_audit=AuditLogCreate(
+            action=BGAction.USER,
+            object_type="refresh",
+            object_id=user_id,
+            payload={"access_token": access_token, "refresh_token": refresh_token},
+        ),
+        session=get_session(),
     )
 
     return Token(access_token=access_token, token_type="bearer")
