@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
+from pydantic import BaseModel
+from pydantic import Field as PydanticField
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -27,3 +29,11 @@ class Meal(MealBase, table=True):
     user_id: int = Field(foreign_key="user.id", index=True)
     total_calories: Optional[float] = Field(default=0.0)
     items: List[MealItem] = Relationship(back_populates="meal")
+    image_url: Optional[str] = None
+
+
+class MealFormCreate(BaseModel):
+    name: Optional[str] = PydanticField(default="meal")
+    notes: Optional[str] = None
+    items: List[int] = PydanticField(default=[])
+    total_calories: Optional[float] = PydanticField(default=0.0)

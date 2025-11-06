@@ -5,7 +5,7 @@ from fastapi import APIRouter, FastAPI
 from app.db.base import metadata
 from app.db.session import engine
 
-from .api.v1 import activity, audit, food, health, user, water
+from .api.v1 import activity, audit, food, health, meal, user, water
 
 
 @asynccontextmanager
@@ -27,6 +27,7 @@ api_v1_router.include_router(water.router, tags=["water"])
 api_v1_router.include_router(food.router, tags=["food"])
 api_v1_router.include_router(activity.router, tags=["activity"])
 api_v1_router.include_router(audit.router, tags=["audit"])
+api_v1_router.include_router(meal.router, tags=["meal"])
 
 
 app.include_router(api_v1_router)
